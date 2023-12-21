@@ -16,6 +16,7 @@ import ChefRecipeForm from './app/screens/ChefRecipeForm';
 import UserRecipeList from './app/screens/UserRecipeList';
 import ChefRecipeListScreen from './app/screens/ChefRecipeListScreen';
 import EditRecipeScreen from './app/screens/EditRecipeScreen';
+import RecipeDetailsScreen from './app/screens/RecipeDetailScreen';
 
 //firebase
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
@@ -43,6 +44,7 @@ export default function App() {
           <Stack.Screen name="UserRecipeListScreen" component={UserRecipeList} options={{ headerShown: false }} />
           <Stack.Screen name="ChefRecipeScreenList" component={ChefRecipeListScreen} options={{ headerShown: false }} />
           <Stack.Screen name="EditRecipeScreen" component={EditRecipeScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="RecipeDetailScreen" component={RecipeDetailsScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>

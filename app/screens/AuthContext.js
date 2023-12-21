@@ -6,6 +6,7 @@ const AuthContext = createContext();
 const initialState = {
   user: null,
   userType: null,
+  likes: {}, // Nuevo campo para almacenar la información de likes
 };
 
 const authReducer = (state, action) => {
@@ -18,6 +19,17 @@ const authReducer = (state, action) => {
       };
     case 'LOGOUT':
       return initialState;
+    case 'TOGGLE_LIKE':
+      return {
+        ...state,
+        likes: {
+          ...state.likes,
+          [action.payload.recipeId]: {
+            ...state.likes[action.payload.recipeId],
+            [action.payload.userId]: !state.likes[action.payload.recipeId]?.[action.payload.userId],
+          },
+        },
+      };
     default:
       return state;
   }
@@ -34,8 +46,13 @@ const AuthProvider = ({ children }) => {
     dispatch({ type: 'LOGOUT' });
   };
 
+  const toggleLike = (recipeId, userId) => {
+    dispatch({ type: 'TOGGLE_LIKE', payload: { recipeId, userId } });
+    // Aquí puedes agregar la lógica para actualizar los likes en tu base de datos (Firebase u otro servicio)
+  };
+
   return (
-    <AuthContext.Provider value={{ state, login, logout }}>
+    <AuthContext.Provider value={{ state, login, logout, toggleLike }}>
       {children}
     </AuthContext.Provider>
   );

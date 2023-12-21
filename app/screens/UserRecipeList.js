@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TextInput, Button } from 'react-native';
+import { View, Text, FlatList, Image, StyleSheet, TextInput, Button, ScrollView } from 'react-native';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../../utils/firebase-config';
 import { useAuth } from './AuthContext';
 import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';
 
 const UserRecipeList = () => {
   const [recipes, setRecipes] = useState([]);
@@ -13,6 +14,7 @@ const UserRecipeList = () => {
   const [orderText, setOrderText] = useState('');
   const [showVegetarian, setShowVegetarian] = useState(false); // Nuevo estado para el interruptor
   const { state } = useAuth();
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -30,8 +32,9 @@ const UserRecipeList = () => {
           recipesQuery = query(collection(db, 'recipes'), orderBy('recipeType'));
           setOrderText('Ordenado por Tipo');
         } else if (orderType === 'postre' || orderType === 'entrada' || orderType === 'platoFuerte') {
-          recipesQuery = query(collection(db, 'recipes'), where('recipeType', '==', orderType));
-          setOrderText(`Mostrar solo ${orderType}`);
+          const capitalizedOrderType = orderType.charAt(0).toUpperCase() + orderType.slice(1);
+          recipesQuery = query(collection(db, 'recipes'), where('recipeType', '==', capitalizedOrderType));
+          setOrderText(`Mostrar solo ${capitalizedOrderType}`);
         }
 
         if (timeFilter) {
@@ -87,13 +90,17 @@ const UserRecipeList = () => {
       />
       <Text style={styles.recipeSubtitle}>Tiempo: {item.time} min</Text>
       <Text style={styles.recipeSubtitle}>¿Es vegetariana?: {item.isVegetarian ? 'Sí' : 'No'}</Text>
+      <Button
+      title="Ver Detalles"
+      onPress={() => navigation.navigate('RecipeDetailScreen', { recipe: item })}
+    />
     </View>
   );
 
 
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.searchContainer}>
 
         <TextInput
@@ -143,7 +150,7 @@ const UserRecipeList = () => {
         keyExtractor={(item) => item.id}
         renderItem={renderRecipeItem}
       />
-    </View>
+    </ScrollView>
   );
 };
 
