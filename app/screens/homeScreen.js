@@ -4,26 +4,31 @@ import { useAuth } from './AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../utils/firebase-config';
+import { useFocusEffect } from '@react-navigation/native';
+
 
 export const homeScreen = () => {
   const { state } = useAuth();
   const navigation = useNavigation();
   const [popularRecipes, setPopularRecipes] = useState([]);
 
-  useEffect(() => {
-    const fetchPopularRecipes = async () => {
-      try {
-        const recipesQuery = query(collection(db, 'recipes'), orderBy('like', 'desc'), limit(3));
-        const recipesSnapshot = await getDocs(recipesQuery);
-        const popularRecipeData = recipesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setPopularRecipes(popularRecipeData);
-      } catch (error) {
-        console.error('Error al obtener las recetas populares:', error);
-      }
-    };
+  const fetchPopularRecipes = async () => {
+    try {
+      const recipesQuery = query(collection(db, 'recipes'), orderBy('like', 'desc'), limit(3));
+      const recipesSnapshot = await getDocs(recipesQuery);
+      const popularRecipeData = recipesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setPopularRecipes(popularRecipeData);
+    } catch (error) {
+      console.error('Error al obtener las recetas populares:', error);
+    }
+  };
 
-    fetchPopularRecipes();
-  }, []); // El segundo argumento es un arreglo de dependencias vacío para que se ejecute solo una vez al montar el componente
+  // Utiliza useFocusEffect para recargar las recetas populares cada vez que se visite la ventana de Home
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchPopularRecipes();
+    }, [])
+  );
 
   return (
     <View style={styles.container}>

@@ -142,7 +142,8 @@ const ChefRecipeForm = () => {
 
       navigation.navigate('Home');
     } catch (error) {
-      console.error('Error al agregar la receta:', error);
+      console.error('Error al agregar la receta:', error.message);
+      console.log('Error details:', error.details);
     }
   };
 
