@@ -12,21 +12,24 @@ import { Image } from 'react-native';
 import { useAuth } from './AuthContext';
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Loading from '../components/Loading';
 
 
 
-export const loginScreen = () => {
+export const LoginScreen = () => {
 
     //variables para el loguin
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [showPassword, setShowPassword] = React.useState(false); // Nuevo estado
+    const [loading, setLoading] = React.useState(false);
+
 
     const togglePasswordVisibility = () => {
         // Cambia el estado para mostrar u ocultar la contraseña
         setShowPassword(!showPassword);
     };
-    
+
 
     const { login } = useAuth();
 
@@ -35,6 +38,7 @@ export const loginScreen = () => {
         const auth = getAuth(app);
 
         try {
+            setLoading(true);
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
@@ -49,8 +53,10 @@ export const loginScreen = () => {
 
         } catch (error) {
             console.log("Error al iniciar sesión:", error.message);
-            Alert.alert(error.message);
+            Alert.alert("Error", "Correo o contraseña son incorrectas");
 
+        } finally {
+            setLoading(false);
         }
 
     }
@@ -72,10 +78,10 @@ export const loginScreen = () => {
                     <TextInput style={styles.input} placeholder='alguien@gmail.com' onChangeText={(text) => setEmail(text)}  >
                     </TextInput>
 
-                    <Text style={styles.text}>Contraseña</Text>
+                    <Text style={styles.text} >Contraseña</Text>
 
                     <View style={styles.inputContainer}>
-                        <TextInput style={styles.input} placeholder='Contraseña' onChangeText={(text) => setPassword(text)} keyboardType='visible-password' secureTextEntry={!showPassword}>
+                        <TextInput style={styles.input} placeholder='Contraseña' secureTextEntry={!showPassword} onChangeText={(text) => setPassword(text)} >
                         </TextInput>
                         <TouchableOpacity onPress={togglePasswordVisibility} style={styles.iconContainer}>
                             <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#333" />
@@ -100,6 +106,7 @@ export const loginScreen = () => {
 
 
             </View>
+            <Loading visible={loading} text="Iniciando sesión..." />
         </View >
     );
 };
@@ -172,7 +179,7 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         marginLeft: 20,
 
-    },    inputContainer: {
+    }, inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         borderBottomWidth: 1,

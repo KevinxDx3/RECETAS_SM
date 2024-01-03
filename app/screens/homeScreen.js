@@ -7,7 +7,7 @@ import { db } from '../../utils/firebase-config';
 import { useFocusEffect } from '@react-navigation/native';
 
 
-export const homeScreen = () => {
+export const HomeScreen = () => {
   const { state } = useAuth();
   const navigation = useNavigation();
   const [popularRecipes, setPopularRecipes] = useState([]);

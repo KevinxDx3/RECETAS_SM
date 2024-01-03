@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, StyleSheet, ScrollView, Image, Text } from 'react-native';
+import { View, TextInput, Button, StyleSheet, ScrollView, Image, Text, Alert } from 'react-native';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from '../../utils/firebase-config';
-import { useAuth } from './AuthContext';
-import { Picker } from '@react-native-picker/picker';
-import * as ImagePicker from 'expo-image-picker';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+import { Picker } from '@react-native-picker/picker';
+import Loading from '../components/Loading';
+import { db } from '../../utils/firebase-config';
 
 const IngredientList = ({ ingredients, handleUpdateIngredient, handleRemoveIngredient, handleAddIngredient }) => {
     return (
@@ -19,6 +18,7 @@ const IngredientList = ({ ingredients, handleUpdateIngredient, handleRemoveIngre
                         value={ingredient}
                         onChangeText={(value) => handleUpdateIngredient(index, value)}
                         style={styles.input}
+                        maxLength={50} // Límite de 50 caracteres
                     />
                     <Button title="Eliminar" onPress={() => handleRemoveIngredient(index)} />
                 </View>
@@ -38,8 +38,8 @@ const EditRecipeScreen = () => {
     const [imagen, setImage] = useState(null);
     const [existingImageUrl, setExistingImageUrl] = useState(null);
     const [recipeType, setRecipeType] = useState('');
+    const [loading, setLoading] = useState(false); // Estado de carga
     const navigation = useNavigation();
-    const { state } = useAuth();
     const route = useRoute();
     const recipeId = route.params.recipeId;
 
@@ -123,24 +123,35 @@ const EditRecipeScreen = () => {
         return Math.floor(100000 + Math.random() * 900000).toString();
     };
 
-
     const handleUpdateRecipe = async () => {
         try {
-            const randomCode = getRandomCode();
-            const imageName = `${randomCode}.png`;
+            setLoading(true); // Activar el estado de carga
 
-            const storage = getStorage();
-            const imageRef = ref(storage, `images/${imageName}`);
-            const blob = await (await fetch(imagen)).blob();
+            if (!title || title.length > 50 || !description || description.length > 250 ||
+                steps.some(step => !step || step.length > 150) || ingredients.some(ingredient => !ingredient || ingredient.length > 50)) {
+                setLoading(false); // Desactivar el estado de carga
+                return Alert.alert('Error', 'Por favor, completa todos los campos antes de guardar la receta.');
+            }
 
-            const uploadTask = uploadBytesResumable(imageRef, blob, {
-                contentType: 'image/png',
-            });
+            let newImageUrl = existingImageUrl; // Por defecto, mantener la imagen existente
 
-            await uploadTask;
+            if (imagen) {
+                const randomCode = getRandomCode();
+                const imageName = `${randomCode}.png`;
 
-            // Obtener la URL de la nueva imagen
-            const newImageUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                const storage = getStorage();
+                const imageRef = ref(storage, `images/${imageName}`);
+                const blob = await (await fetch(imagen)).blob();
+
+                const uploadTask = uploadBytesResumable(imageRef, blob, {
+                    contentType: 'image/png',
+                });
+
+                await uploadTask;
+
+                // Obtener la URL de la nueva imagen
+                newImageUrl = await getDownloadURL(uploadTask.snapshot.ref);
+            }
 
             // Antes de actualizar el documento, eliminar la imagen existente si es necesario
             if (existingImageUrl && imagen && existingImageUrl !== imagen) {
@@ -156,7 +167,7 @@ const EditRecipeScreen = () => {
                 ingredients,
                 time,
                 isVegetarian,
-                imageUrl: imagen ? newImageUrl : existingImageUrl, // Usar la nueva URL o la existente
+                imageUrl: newImageUrl, // Usar la nueva URL o la existente
                 recipeType,
             };
 
@@ -165,30 +176,40 @@ const EditRecipeScreen = () => {
             navigation.navigate('Home');
         } catch (error) {
             console.error('Error al actualizar la receta:', error);
+            // Puedes agregar un manejo específico del error aquí si es necesario
+        } finally {
+            setLoading(false); // Desactivar el estado de carga incluso en caso de error
         }
     };
+
 
     return (
         <ScrollView style={styles.container}>
             <TextInput
-                placeholder="Título"
+                placeholder="Título (máx. 50 caracteres)"
                 value={title}
                 onChangeText={setTitle}
                 style={styles.input}
+                maxLength={50}
             />
             <TextInput
-                placeholder="Descripción"
+                placeholder="Descripción (máx. 250 caracteres)"
                 value={description}
                 onChangeText={setDescription}
                 style={styles.input}
+                multiline={true}
+                maxLength={250}
             />
+
             {steps.map((step, index) => (
                 <View key={index} style={styles.stepContainer}>
                     <TextInput
-                        placeholder={`Paso ${index + 1}`}
+                        placeholder={`Paso ${index + 1} (máx. 150 caracteres)`}
                         value={step}
                         onChangeText={(value) => handleUpdateStep(index, value)}
                         style={styles.input}
+                        multiline={true}
+                        maxLength={150}
                     />
                     <Button title="Eliminar" onPress={() => handleRemoveStep(index)} />
                 </View>
@@ -224,14 +245,14 @@ const EditRecipeScreen = () => {
             </View>
 
             <View style={styles.input}>
-                <Text>Tipo de Receta</Text>
+                <Text>Tipo de receta:</Text>
                 <Picker
                     selectedValue={recipeType}
                     onValueChange={(value) => setRecipeType(value)}
                 >
-                    <Picker.Item label="Postre" value="postre" />
-                    <Picker.Item label="Entrada" value="entrada" />
-                    <Picker.Item label="Plato Fuerte" value="platoFuerte" />
+                    <Picker.Item label="Postre" value="Postre" />
+                    <Picker.Item label="Entrada" value="Entrada" />
+                    <Picker.Item label="Plato Fuerte" value="PlatoFuerte" />
                 </Picker>
             </View>
 
@@ -245,10 +266,10 @@ const EditRecipeScreen = () => {
 
             <Button title="Seleccionar imagen" onPress={pickImage} />
             <Button title="Actualizar Receta" onPress={handleUpdateRecipe} />
+            {loading && <Loading visible={loading} text="Actualizando Receta..." />}
         </ScrollView>
     );
 };
-
 
 const styles = StyleSheet.create({
     container: {

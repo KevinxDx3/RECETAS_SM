@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, StyleSheet, ScrollView, Image, Text } from 'react-native';
+import { View, TextInput, Button, StyleSheet, ScrollView, Image, Text, Alert } from 'react-native';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../utils/firebase-config';
 import { useAuth } from './AuthContext';
@@ -7,6 +7,8 @@ import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useNavigation } from '@react-navigation/native';
+import Loading from '../components/Loading';
+
 
 const IngredientList = ({ ingredients, handleUpdateIngredient, handleRemoveIngredient, handleAddIngredient }) => {
   return (
@@ -18,6 +20,7 @@ const IngredientList = ({ ingredients, handleUpdateIngredient, handleRemoveIngre
             value={ingredient}
             onChangeText={(value) => handleUpdateIngredient(index, value)}
             style={styles.input}
+            maxLength={50}
           />
           <Button title="Eliminar" onPress={() => handleRemoveIngredient(index)} />
         </View>
@@ -34,6 +37,7 @@ const ChefRecipeForm = () => {
   const [ingredients, setIngredients] = useState(['']);
   const [recipeType, setRecipeType] = useState('PlatoFuerte'); // Valor predeterminado
   const [like, setLike] = useState(0); // Valor predeterminado
+  const [loading, setLoading] = React.useState(false);
 
 
   const [time, setTime] = useState('');
@@ -101,6 +105,19 @@ const ChefRecipeForm = () => {
 
   const handleAddRecipe = async () => {
     try {
+      setLoading(true);
+
+      if (!title || title.length > 50 || !description || description.length > 250 ||
+        steps.some(step => !step || step.length > 150) || ingredients.some(ingredient => !ingredient || ingredient.length > 50)) {
+        setLoading(false);
+        return Alert.alert('Error', 'Porfavor procura seleccionar todos los campos antes de guardar tu receta !');
+      }
+      // Validar si se ha seleccionado una imagen
+      if (!imagen) {
+        setLoading(false);
+        return Alert.alert('Seleccione una imagen para la receta');
+      }
+
       const randomCode = getRandomCode();
       const imageName = `${randomCode}.png`;
 
@@ -111,6 +128,7 @@ const ChefRecipeForm = () => {
       const uploadTask = uploadBytesResumable(imageRef, blob, {
         contentType: 'image/png',
       });
+
 
       await uploadTask;
 
@@ -141,9 +159,12 @@ const ChefRecipeForm = () => {
       setImage(null);
 
       navigation.navigate('Home');
+
     } catch (error) {
       console.error('Error al agregar la receta:', error.message);
       console.log('Error details:', error.details);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -154,29 +175,20 @@ const ChefRecipeForm = () => {
   return (
     <ScrollView style={styles.container}>
       <TextInput
-        placeholder="Título"
+        placeholder="Título (máx. 50 caracteres)"
         value={title}
         onChangeText={setTitle}
         style={styles.input}
+        maxLength={50}
       />
       <TextInput
-        placeholder="Descripción"
+        placeholder="Descripción (máx. 250 caracteres)"
         value={description}
         onChangeText={setDescription}
         style={styles.input}
+        multiline={true}
+        maxLength={250}
       />
-      {steps.map((step, index) => (
-        <View key={index} style={styles.stepContainer}>
-          <TextInput
-            placeholder={`Paso ${index + 1}`}
-            value={step}
-            onChangeText={(value) => handleUpdateStep(index, value)}
-            style={styles.input}
-          />
-          <Button title="Eliminar" onPress={() => handleRemoveStep(index)} />
-        </View>
-      ))}
-      <Button title="Agregar Paso" onPress={handleAddStep} />
 
       {/* Agregar componente para la lista de ingredientes */}
       <IngredientList
@@ -185,6 +197,21 @@ const ChefRecipeForm = () => {
         handleRemoveIngredient={handleRemoveIngredient}
         handleAddIngredient={handleAddIngredient}
       />
+
+      {steps.map((step, index) => (
+        <View key={index} style={styles.stepContainer}>
+          <TextInput
+            placeholder={`Paso ${index + 1} (máx. 150 caracteres)`}
+            value={step}
+            onChangeText={(value) => handleUpdateStep(index, value)}
+            style={styles.input}
+            multiline={true}
+            maxLength={150}
+          />
+          <Button title="Eliminar" onPress={() => handleRemoveStep(index)} />
+        </View>
+      ))}
+      <Button title="Agregar Paso" onPress={handleAddStep} />
 
       <View style={styles.input}>
         <Text>Tipo de receta:</Text>
@@ -208,7 +235,6 @@ const ChefRecipeForm = () => {
         <Picker.Item label="+15 min" value="+15" />
       </Picker>
 
-      {/* Agregar opción para seleccionar si es vegetariana */}
       <View style={styles.input}>
         <Text>¿Es vegetariana?</Text>
         <Picker
@@ -225,6 +251,7 @@ const ChefRecipeForm = () => {
       )}
       <Button title="Seleccionar imagen" onPress={pickImage} />
       <Button title="Agregar Receta" onPress={handleAddRecipe} />
+      {loading && <Loading visible={loading} text="Agregando Receta..." />}
     </ScrollView>
   );
 };
