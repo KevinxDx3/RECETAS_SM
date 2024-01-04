@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TextInput, Button, ScrollView } from 'react-native';
+import { View, Text, FlatList, Image, StyleSheet, TextInput, Button, ScrollView, Switch } from 'react-native';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../../utils/firebase-config';
 import { useAuth } from './AuthContext';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
+
 
 const UserRecipeList = () => {
   const [recipes, setRecipes] = useState([]);
@@ -12,7 +13,7 @@ const UserRecipeList = () => {
   const [timeFilter, setTimeFilter] = useState('');
   const [orderType, setOrderType] = useState('');
   const [orderText, setOrderText] = useState('');
-  const [showVegetarian, setShowVegetarian] = useState(false); // Nuevo estado para el interruptor
+  const [showVegetarian, setShowVegetarian] = useState(false);
   const { state } = useAuth();
   const navigation = useNavigation();
 
@@ -45,7 +46,7 @@ const UserRecipeList = () => {
         // Aplicar filtro de recetas vegetarianas si está activado
         if (showVegetarian) {
           recipesQuery = query(collection(db, 'recipes'), where('isVegetarian', '==', true));
-          setOrderText('Mostrar solo recetas vegetarianas');
+          // No es necesario establecer el texto aquí, ya que no se mostrará
         }
 
         const recipesSnapshot = await getDocs(recipesQuery);
@@ -62,10 +63,6 @@ const UserRecipeList = () => {
   if (state.userType !== '2') {
     return null;
   }
-
-  const renderStep = ({ item, index }) => (
-    <Text key={index}>{`${index + 1}. ${item}`}</Text>
-  );
 
   const renderRecipeItem = ({ item }) => (
     <View style={styles.recipeCard}>
@@ -90,78 +87,113 @@ const UserRecipeList = () => {
       />
       <Text style={styles.recipeSubtitle}>Tiempo: {item.time} min</Text>
       <Text style={styles.recipeSubtitle}>¿Es vegetariana?: {item.isVegetarian ? 'Sí' : 'No'}</Text>
+
       <Button
-      title="Ver Detalles"
-      onPress={() => navigation.navigate('RecipeDetailScreen', { recipe: item })}
-    />
+        title="Ver Detalles"
+        onPress={() => navigation.navigate('RecipeDetailScreen', { recipe: item })}
+        color="#E5690E"
+      />
+
     </View>
   );
 
-
-
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.searchContainer}>
+      <View style={{
+        backgroundColor: '#FA953B',
+        borderBottomEndRadius: 50,
+        borderBottomStartRadius: 50,
+        height: 275,
+        padding: 20,
 
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar recetas por nombre"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+      }}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar recetas por nombre"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          <Button title="Limpiar" onPress={() => setSearchQuery('')} color="#E5690E"/>
+        </View>
+        <View style={styles.orderFilterContainer}>
+          <View style={{ paddingTop: 50, flexDirection: 'column', flex: 1 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 10 }}>
+              <Text style={styles.switchText}>Recetas Vegetarianas: </Text>
+              <Switch
+                value={showVegetarian}
+                onValueChange={() => setShowVegetarian(!showVegetarian)}
+                style={styles.switch}
+              />
+            </View>
 
-        <Button title="Limpiar" onPress={() => setSearchQuery('')} />
+
+            <Picker
+              selectedValue={orderType}
+              onValueChange={(value) => {
+                setOrderType(value);
+                setOrderText(value === 'recipeType' ? 'Ordenado por Tipo' : value === 'vegetarian' ? 'Filtrar Vegetarianas' : value === 'time' ? 'Ordenado por Tiempo' : '');
+              }}
+              style={styles.picker}
+            >
+
+              <Picker.Item label="Tipo de receta" value="" />
+              <Picker.Item label="Postre" value="postre" />
+              <Picker.Item label="Entrada" value="entrada" />
+              <Picker.Item label="Plato Fuerte" value="platoFuerte" />
+            </Picker>
+
+            <View style={{
+              borderBottomWidth: 1,
+              borderBottomColor: 'white'
+            }} />
+
+            <Text style={styles.orderText}>{orderText}</Text>
+
+            <Picker
+              selectedValue={timeFilter}
+              onValueChange={(value) => {
+                setTimeFilter(value);
+              }}
+              style={styles.picker}
+              itemStyle={styles.pickerItem}
+            >
+              <Picker.Item label="Tiempo" value="" />
+              <Picker.Item label="-15 min" value="-15" />
+              <Picker.Item label="15 min" value="15" />
+              <Picker.Item label="+15 min" value="+15" />
+            </Picker>
+
+          </View>
+        </View>
       </View>
-      <View style={styles.orderFilterContainer}>
-        <Button
-          title={`Recetas Vegetarianas: ${showVegetarian ? 'Activado' : 'Desactivado'}`}
-          onPress={() => setShowVegetarian(!showVegetarian)}
+      <View
+        style={{
+          padding: 20
+        }}>
+        <Text style={styles.header}>Recetas Disponibles:</Text>
+
+        <FlatList
+          data={recipes}
+          keyExtractor={(item) => item.id}
+          renderItem={renderRecipeItem}
         />
-        <Picker
-          selectedValue={orderType}
-          onValueChange={(value) => {
-            setOrderType(value);
-            setOrderText(value === 'recipeType' ? 'Ordenado por Tipo' : value === 'vegetarian' ? 'Filtrar Vegetarianas' : value === 'time' ? 'Ordenado por Tiempo' : '');
-          }}
-        >
-          <Picker.Item label="Tipo de receta" value="" />
-          <Picker.Item label="Postre" value="postre" />
-          <Picker.Item label="Entrada" value="entrada" />
-          <Picker.Item label="Plato Fuerte" value="platoFuerte" />
-
-        </Picker>
-        <Text style={styles.orderText}>{orderText}</Text>
-
-        <Picker
-          selectedValue={timeFilter}
-          onValueChange={(value) => {
-            setTimeFilter(value);
-          }}
-        >
-          <Picker.Item label="Tiempo" value="" />
-          <Picker.Item label="-15 min" value="-15" />
-          <Picker.Item label="15 min" value="15" />
-          <Picker.Item label="+15 min" value="+15" />
-        </Picker>
-      </View>
-      <Text style={styles.header}>Recetas Disponibles:</Text>
-      <FlatList
-        data={recipes}
-        keyExtractor={(item) => item.id}
-        renderItem={renderRecipeItem}
-      />
+      </View >
     </ScrollView>
+
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+
+    flex: 1,
   },
   header: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
+    color: 'black',
   },
   recipeCard: {
     marginBottom: 20,
@@ -201,22 +233,44 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     marginBottom: 10,
+    alignItems: 'center',
   },
   searchInput: {
     flex: 1,
     marginRight: 10,
     padding: 10,
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
     borderRadius: 5,
   },
   orderFilterContainer: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     marginBottom: 10,
+    alignItems: 'center',
+  },
+  switch: {
+    marginRight: 10,
+  },
+  switchText: {
+    fontSize: 16,
+    color: 'white',
+  },
+  picker: {
+    flex: 1,
+    marginRight: 10,
+    color: 'white',
+    borderColor: 'black',
+    borderBottomWidth: 1,
+    borderBottomColor: 'darkslategray'
+
+
   },
   orderText: {
-    marginLeft: 10,
     fontSize: 16,
     fontWeight: 'bold',
+    color: 'white',
+  },
+  pickerItem: {
+    color: 'white',  // Color del texto de los elementos del Picker
   },
 });
 

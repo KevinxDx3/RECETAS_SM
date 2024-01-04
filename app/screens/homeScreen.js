@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../utils/firebase-config';
 import { useFocusEffect } from '@react-navigation/native';
-
+import Icon from 'react-native-vector-icons/Feather';
 
 export const HomeScreen = () => {
   const { state } = useAuth();
@@ -32,51 +32,61 @@ export const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.welcomeText}>Bienvenido, {state.user && state.user.displayName}</Text>
+      <View style={styles.leftContainer}>
+        <Text style={styles.welcomeText}>Mi libro de recetas</Text>
+        {state.userType === '1' && (
+          <>
+            <TouchableOpacity
+              style={styles.buttonContainer}
+              onPress={() => navigation.navigate('ChefRecipeScreen')}
+            >
+              <Icon name="plus-circle" size={20} color="#fff" style={styles.icon} />
+              <Text style={styles.buttonText}>Crear Receta</Text>
+            </TouchableOpacity>
 
-      {state.userType === '1' && (
-        <>
+            <TouchableOpacity
+              style={styles.buttonContainer}
+              onPress={() => navigation.navigate('ChefRecipeScreenList')}
+            >
+              <Icon name="edit" size={20} color="#fff" style={styles.icon} />
+              <Text style={styles.buttonText}>Ver y Eliminar Recetas</Text>
+            </TouchableOpacity>
+          </>
+        )}
+        {state.userType === '2' && (
           <TouchableOpacity
             style={styles.buttonContainer}
-            onPress={() => navigation.navigate('ChefRecipeScreen')}
+            onPress={() => navigation.navigate('UserRecipeListScreen')}
           >
-            <Text style={styles.buttonText}>Crear Receta</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.buttonContainer}
-            onPress={() => navigation.navigate('ChefRecipeScreenList')}
-          >
-            <Text style={styles.buttonText}>Ver y Eliminar Recetas</Text>
-          </TouchableOpacity>
-        </>
-      )}
-
-      {state.userType === '2' && (
-        <TouchableOpacity
-          style={styles.buttonContainer}
-          onPress={() => navigation.navigate('UserRecipeListScreen')}
-        >
-          <Text style={styles.buttonText}>Ver Recetas</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Carril de tarjetas para recetas populares */}
-      <Text style={styles.header}>Recetas Populares:</Text>
-      <FlatList
-        data={popularRecipes}
-        keyExtractor={(item) => item.id}
-        horizontal
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.popularRecipeCard}
-            onPress={() => navigation.navigate('RecipeDetailScreen', { recipe: item })}
-          >
-            <Image source={{ uri: item.imageUrl }} style={styles.popularRecipeImage} />
-            <Text style={styles.popularRecipeTitle}>{item.title}</Text>
+            <Text style={styles.buttonText}>Ver Recetas</Text>
           </TouchableOpacity>
         )}
-      />
+      </View>
+
+      <View style={styles.rightContainer}>
+        {/* Carril de tarjetas para recetas populares */}
+        <Text style={styles.header}>Recetas Populares</Text>
+        <FlatList
+          data={popularRecipes}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={state.userType === '1' ? styles.disabledRecipeCard : styles.popularRecipeCard}
+              onPress={() => {
+                if (state.userType === '2') {
+                  navigation.navigate('RecipeDetailScreen', { recipe: item });
+                }
+              }}
+              pointerEvents={state.userType === '1' ? 'none' : 'auto'}
+            >
+              <Image source={{ uri: item.imageUrl }} style={styles.popularRecipeImage} />
+              <Text style={styles.popularRecipeTitle}>{item.title}</Text>
+              <Text style={styles.Description}>{item.recipeType}</Text>
+              <Text style={styles.Description}>{item.time} min </Text>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
     </View>
   );
 };
@@ -84,20 +94,37 @@ export const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    flexDirection: 'row',
+  },
+  leftContainer: {
+    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    padding: 15,
+    backgroundColor: '#FA953B',
+    borderBottomEndRadius: 10000,
+    borderBottomStartRadius: 10000,
+    height: '100%',
+    elevation: 10,
+  },
+  rightContainer: {
+    flex: 1,
+    alignItems: 'stretch',
+    padding: 15,
   },
   welcomeText: {
-    fontSize: 20,
+    fontSize: 35,
     fontWeight: 'bold',
+    fontFamily: 'Bradley Hand',
     marginBottom: 20,
+    color: 'white',
   },
   buttonContainer: {
-    backgroundColor: '#3498db',
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 10,
+    backgroundColor: '#E5690E',
+    padding: '6%',
+    borderRadius: 50,
+    marginTop: '3%',
+    flexDirection: 'row',
+    elevation: 4,
   },
   buttonText: {
     color: '#fff',
@@ -105,36 +132,60 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   header: {
-    flex: 0,
-    fontSize: 18,
+    fontSize: 25,
     fontWeight: 'bold',
     marginTop: 20,
-    marginBottom: 10,
+    marginBottom: 20,
   },
   popularRecipeCard: {
     flex: 1,
-    marginRight: 10,
+    flexDirection: 'column',
     backgroundColor: '#F5EBD6',
     borderRadius: 10,
     padding: 10,
-    width: 120,
-    height: 150,
+    width: '100%',
+    height: 250,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 4,
     elevation: 5,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  disabledRecipeCard: {
+    flex: 1,
+    flexDirection: 'column',
+    backgroundColor: '#F5EBD6',
+    borderRadius: 10,
+    padding: 10,
+    width: '100%',
+    height: 250,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 5,
+    marginBottom: 20,
+    alignItems: 'center',
+    
   },
   popularRecipeTitle: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: 'bold',
+    marginTop: 5,
+  },
+  Description: {
+    fontSize: 10,
     marginTop: 5,
   },
   popularRecipeImage: {
     width: '100%',
-    height: 80,
+    height: '50%',
     borderRadius: 8,
     marginBottom: 5,
   },
+  icon: {
+    marginRight: 10,
+  },
 });
-

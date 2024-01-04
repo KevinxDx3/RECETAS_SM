@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, StyleSheet, ScrollView, Image, Text, Alert } from 'react-native';
+import { View, TextInput, Button, StyleSheet, ScrollView, Image, Text, Alert, Platform } from 'react-native';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../utils/firebase-config';
 import { useAuth } from './AuthContext';
@@ -8,7 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useNavigation } from '@react-navigation/native';
 import Loading from '../components/Loading';
-
+import { Ionicons } from '@expo/vector-icons'; // Importar el ícono de Ionicons
 
 const IngredientList = ({ ingredients, handleUpdateIngredient, handleRemoveIngredient, handleAddIngredient }) => {
   return (
@@ -22,10 +22,21 @@ const IngredientList = ({ ingredients, handleUpdateIngredient, handleRemoveIngre
             style={styles.input}
             maxLength={50}
           />
-          <Button title="Eliminar" onPress={() => handleRemoveIngredient(index)} />
+          <Ionicons
+            name="trash-outline"
+            size={24}
+            color="red"
+            onPress={() => handleRemoveIngredient(index)}
+          />
+          <Ionicons
+            name="add-circle-outline"
+            size={24}
+            color="green"
+            onPress={() => handleAddIngredient()}
+          />
         </View>
       ))}
-      <Button title="Agregar Ingrediente" onPress={() => handleAddIngredient()} />
+
     </>
   );
 };
@@ -35,10 +46,9 @@ const ChefRecipeForm = () => {
   const [description, setDescription] = useState('');
   const [steps, setSteps] = useState(['']);
   const [ingredients, setIngredients] = useState(['']);
-  const [recipeType, setRecipeType] = useState('PlatoFuerte'); // Valor predeterminado
-  const [like, setLike] = useState(0); // Valor predeterminado
+  const [recipeType, setRecipeType] = useState('PlatoFuerte');
+  const [like, setLike] = useState(0);
   const [loading, setLoading] = React.useState(false);
-
 
   const [time, setTime] = useState('');
   const [isVegetarian, setIsVegetarian] = useState(false);
@@ -55,7 +65,7 @@ const ChefRecipeForm = () => {
         quality: 1,
       });
 
-      if (!resultado.canceled) {
+      if (!resultado.cancelled) {
         setImage(resultado.uri);
       }
     } catch (error) {
@@ -110,9 +120,9 @@ const ChefRecipeForm = () => {
       if (!title || title.length > 50 || !description || description.length > 250 ||
         steps.some(step => !step || step.length > 150) || ingredients.some(ingredient => !ingredient || ingredient.length > 50)) {
         setLoading(false);
-        return Alert.alert('Error', 'Porfavor procura seleccionar todos los campos antes de guardar tu receta !');
+        return Alert.alert('Error', 'Por favor, completa todos los campos antes de guardar tu receta.');
       }
-      // Validar si se ha seleccionado una imagen
+
       if (!imagen) {
         setLoading(false);
         return Alert.alert('Seleccione una imagen para la receta');
@@ -129,7 +139,6 @@ const ChefRecipeForm = () => {
         contentType: 'image/png',
       });
 
-
       await uploadTask;
 
       const imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
@@ -143,8 +152,8 @@ const ChefRecipeForm = () => {
         isVegetarian,
         imageUrl,
         chefId: state.user.uid,
-        recipeType, // Agregar el tipo de receta
-        like, // Agregar el campo like
+        recipeType,
+        like,
       };
 
       const docRef = await addDoc(collection(db, 'recipes'), recipeData);
@@ -159,10 +168,8 @@ const ChefRecipeForm = () => {
       setImage(null);
 
       navigation.navigate('Home');
-
     } catch (error) {
       console.error('Error al agregar la receta:', error.message);
-      console.log('Error details:', error.details);
     } finally {
       setLoading(false);
     }
@@ -174,84 +181,113 @@ const ChefRecipeForm = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <TextInput
-        placeholder="Título (máx. 50 caracteres)"
-        value={title}
-        onChangeText={setTitle}
-        style={styles.input}
-        maxLength={50}
-      />
-      <TextInput
-        placeholder="Descripción (máx. 250 caracteres)"
-        value={description}
-        onChangeText={setDescription}
-        style={styles.input}
-        multiline={true}
-        maxLength={250}
-      />
+      <View style={styles.recipeCard}>
+        <TextInput
+          placeholder="Título (máx. 50 caracteres)"
+          value={title}
+          onChangeText={setTitle}
+          style={styles.input}
+          maxLength={50}
+        />
+        <TextInput
+          placeholder="Descripción (máx. 250 caracteres)"
+          value={description}
+          onChangeText={setDescription}
+          style={[styles.input, styles.multilineInput]}
+          multiline={true}
+          maxLength={250}
+        />
+        <IngredientList
+          ingredients={ingredients}
+          handleUpdateIngredient={handleUpdateIngredient}
+          handleRemoveIngredient={handleRemoveIngredient}
+          handleAddIngredient={handleAddIngredient}
+        />
+        {steps.map((step, index) => (
+          <View key={index} style={styles.stepContainer}>
+            <TextInput
+              placeholder={`Paso ${index + 1} (máx. 150 caracteres)`}
+              value={step}
+              onChangeText={(value) => handleUpdateStep(index, value)}
+              style={[styles.input, styles.multilineInput]}
+              multiline={true}
+              maxLength={150}
+            />
+            <Ionicons
+              name="trash-outline"
+              size={24}
+              color="red"
+              onPress={() => handleRemoveStep(index)}
+            />
+            <Ionicons
+              name="add-circle-outline"
+              size={24}
+              color="green"
+              onPress={handleAddStep}
+            />
+          </View>
+        ))}
 
-      {/* Agregar componente para la lista de ingredientes */}
-      <IngredientList
-        ingredients={ingredients}
-        handleUpdateIngredient={handleUpdateIngredient}
-        handleRemoveIngredient={handleRemoveIngredient}
-        handleAddIngredient={handleAddIngredient}
-      />
-
-      {steps.map((step, index) => (
-        <View key={index} style={styles.stepContainer}>
-          <TextInput
-            placeholder={`Paso ${index + 1} (máx. 150 caracteres)`}
-            value={step}
-            onChangeText={(value) => handleUpdateStep(index, value)}
-            style={styles.input}
-            multiline={true}
-            maxLength={150}
-          />
-          <Button title="Eliminar" onPress={() => handleRemoveStep(index)} />
+        <View style={styles.input}>
+          <Text>Tipo de receta:</Text>
+          <Picker
+            selectedValue={recipeType}
+            onValueChange={(value) => setRecipeType(value)}
+          >
+            <Picker.Item label="Postre" value="Postre" />
+            <Picker.Item label="Entrada" value="Entrada" />
+            <Picker.Item label="Plato Fuerte" value="PlatoFuerte" />
+          </Picker>
         </View>
-      ))}
-      <Button title="Agregar Paso" onPress={handleAddStep} />
+        <View style={{
+          borderTopWidth: 2,
+          borderColor: '#E5690E',
+          marginBottom: 10
+        }}>
+          <Picker
+            selectedValue={time}
+            onValueChange={(value) => setTime(value)}
+            style={styles.input}
+          >
+            <Picker.Item label="-15 min" value="-15" />
+            <Picker.Item label="15 min" value="15" />
+            <Picker.Item label="+15 min" value="+15" />
+          </Picker>
+        </View>
+        <View style={styles.input}>
+          <Text>¿Es vegetariana?</Text>
+          <Picker
+            selectedValue={isVegetarian}
+            onValueChange={(value) => setIsVegetarian(value)}
+          >
+            <Picker.Item label="No" value={false} />
+            <Picker.Item label="Sí" value={true} />
+          </Picker>
+        </View>
+        {imagen && (
+          <Image source={{ uri: imagen }} style={styles.imagePreview} />
+        )}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Text>Seleccionar Imagen</Text>
+          <Ionicons
+            name="image-outline"
+            size={30}
+            color="blue"
+            onPress={pickImage}
+          />
+          <View style={{ alignItems: 'center' }}>
 
-      <View style={styles.input}>
-        <Text>Tipo de receta:</Text>
-        <Picker
-          selectedValue={recipeType}
-          onValueChange={(value) => setRecipeType(value)}
-        >
-          <Picker.Item label="Postre" value="Postre" />
-          <Picker.Item label="Entrada" value="Entrada" />
-          <Picker.Item label="Plato Fuerte" value="PlatoFuerte" />
-        </Picker>
+            <Ionicons
+              name="add-circle-outline"
+              size={50}
+              color="blue"
+              onPress={handleAddRecipe}
+            />
+            <Text>Subir Receta</Text>
+          </View>
+        </View>
+        {loading && <Loading visible={loading} text="Agregando Receta..." />}
       </View>
-
-      <Picker
-        selectedValue={time}
-        onValueChange={(value) => setTime(value)}
-        style={styles.input}
-      >
-        <Picker.Item label="-15 min" value="-15" />
-        <Picker.Item label="15 min" value="15" />
-        <Picker.Item label="+15 min" value="+15" />
-      </Picker>
-
-      <View style={styles.input}>
-        <Text>¿Es vegetariana?</Text>
-        <Picker
-          selectedValue={isVegetarian}
-          onValueChange={(value) => setIsVegetarian(value)}
-        >
-          <Picker.Item label="No" value={false} />
-          <Picker.Item label="Sí" value={true} />
-        </Picker>
-      </View>
-
-      {imagen && (
-        <Image source={{ uri: imagen }} style={{ width: 200, height: 200 }} />
-      )}
-      <Button title="Seleccionar imagen" onPress={pickImage} />
-      <Button title="Agregar Receta" onPress={handleAddRecipe} />
-      {loading && <Loading visible={loading} text="Agregando Receta..." />}
     </ScrollView>
   );
 };
@@ -260,16 +296,42 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
   },
+  recipeCard: {
+    backgroundColor: '#F0C396',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+    padding: 15,
+  },
   stepContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 10,
   },
   input: {
+
+    borderTopWidth: 2,
+    borderColor: '#E5690E',
     marginBottom: 10,
     padding: 10,
-    backgroundColor: '#F5EBD6',
+    backgroundColor: 'white',
     borderRadius: 5,
     flex: 1,
+  },
+  multilineInput: {
+    height: Platform.OS === 'ios' ? 80 : undefined,
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    marginTop: 10,
+    marginBottom: 10,
+    borderRadius: 5,
   },
 });
 
