@@ -185,88 +185,90 @@ const EditRecipeScreen = () => {
 
     return (
         <ScrollView style={styles.container}>
-            <TextInput
-                placeholder="Título (máx. 50 caracteres)"
-                value={title}
-                onChangeText={setTitle}
-                style={styles.input}
-                maxLength={50}
-            />
-            <TextInput
-                placeholder="Descripción (máx. 250 caracteres)"
-                value={description}
-                onChangeText={setDescription}
-                style={styles.input}
-                multiline={true}
-                maxLength={250}
-            />
+            <View style={styles.cardContainer}>
+                <TextInput
+                    placeholder="Título (máx. 50 caracteres)"
+                    value={title}
+                    onChangeText={setTitle}
+                    style={styles.input}
+                    maxLength={50}
+                />
+                <TextInput
+                    placeholder="Descripción (máx. 250 caracteres)"
+                    value={description}
+                    onChangeText={setDescription}
+                    style={styles.input}
+                    multiline={true}
+                    maxLength={250}
+                />
 
-            {steps.map((step, index) => (
-                <View key={index} style={styles.stepContainer}>
-                    <TextInput
-                        placeholder={`Paso ${index + 1} (máx. 150 caracteres)`}
-                        value={step}
-                        onChangeText={(value) => handleUpdateStep(index, value)}
-                        style={styles.input}
-                        multiline={true}
-                        maxLength={150}
-                    />
-                    <Button title="Eliminar" onPress={() => handleRemoveStep(index)} />
+                {steps.map((step, index) => (
+                    <View key={index} style={styles.stepContainer}>
+                        <TextInput
+                            placeholder={`Paso ${index + 1} (máx. 150 caracteres)`}
+                            value={step}
+                            onChangeText={(value) => handleUpdateStep(index, value)}
+                            style={styles.input}
+                            multiline={true}
+                            maxLength={150}
+                        />
+                        <Button title="Eliminar" onPress={() => handleRemoveStep(index)} />
+                    </View>
+                ))}
+                <Button title="Agregar Paso" onPress={handleAddStep} />
+
+                <IngredientList
+                    ingredients={ingredients}
+                    handleUpdateIngredient={handleUpdateIngredient}
+                    handleRemoveIngredient={handleRemoveIngredient}
+                    handleAddIngredient={handleAddIngredient}
+                />
+
+                <Picker
+                    selectedValue={time}
+                    onValueChange={(value) => setTime(value)}
+                    style={styles.input}
+                >
+                    <Picker.Item label="-15 min" value="-15" />
+                    <Picker.Item label="15 min" value="15" />
+                    <Picker.Item label="+15 min" value="+15" />
+                </Picker>
+
+                <View style={styles.input}>
+                    <Text>¿Es vegetariana?</Text>
+                    <Picker
+                        selectedValue={isVegetarian}
+                        onValueChange={(value) => setIsVegetarian(value)}
+                    >
+                        <Picker.Item label="No" value={false} />
+                        <Picker.Item label="Sí" value={true} />
+                    </Picker>
                 </View>
-            ))}
-            <Button title="Agregar Paso" onPress={handleAddStep} />
 
-            <IngredientList
-                ingredients={ingredients}
-                handleUpdateIngredient={handleUpdateIngredient}
-                handleRemoveIngredient={handleRemoveIngredient}
-                handleAddIngredient={handleAddIngredient}
-            />
+                <View style={styles.input}>
+                    <Text>Tipo de receta:</Text>
+                    <Picker
+                        selectedValue={recipeType}
+                        onValueChange={(value) => setRecipeType(value)}
+                    >
+                        <Picker.Item label="Postre" value="Postre" />
+                        <Picker.Item label="Entrada" value="Entrada" />
+                        <Picker.Item label="Plato Fuerte" value="PlatoFuerte" />
+                    </Picker>
+                </View>
 
-            <Picker
-                selectedValue={time}
-                onValueChange={(value) => setTime(value)}
-                style={styles.input}
-            >
-                <Picker.Item label="-15 min" value="-15" />
-                <Picker.Item label="15 min" value="15" />
-                <Picker.Item label="+15 min" value="+15" />
-            </Picker>
+                {existingImageUrl && (
+                    <Image source={{ uri: existingImageUrl }} style={{ width: 200, height: 200 }} />
+                )}
 
-            <View style={styles.input}>
-                <Text>¿Es vegetariana?</Text>
-                <Picker
-                    selectedValue={isVegetarian}
-                    onValueChange={(value) => setIsVegetarian(value)}
-                >
-                    <Picker.Item label="No" value={false} />
-                    <Picker.Item label="Sí" value={true} />
-                </Picker>
+                {imagen && !existingImageUrl && (
+                    <Image source={{ uri: imagen }} style={{ width: 200, height: 200 }} />
+                )}
+
+                <Button title="Seleccionar imagen" onPress={pickImage} />
+                <Button title="Actualizar Receta" onPress={handleUpdateRecipe} />
+                {loading && <Loading visible={loading} text="Actualizando Receta..." />}
             </View>
-
-            <View style={styles.input}>
-                <Text>Tipo de receta:</Text>
-                <Picker
-                    selectedValue={recipeType}
-                    onValueChange={(value) => setRecipeType(value)}
-                >
-                    <Picker.Item label="Postre" value="Postre" />
-                    <Picker.Item label="Entrada" value="Entrada" />
-                    <Picker.Item label="Plato Fuerte" value="PlatoFuerte" />
-                </Picker>
-            </View>
-
-            {existingImageUrl && (
-                <Image source={{ uri: existingImageUrl }} style={{ width: 200, height: 200 }} />
-            )}
-
-            {imagen && !existingImageUrl && (
-                <Image source={{ uri: imagen }} style={{ width: 200, height: 200 }} />
-            )}
-
-            <Button title="Seleccionar imagen" onPress={pickImage} />
-            <Button title="Actualizar Receta" onPress={handleUpdateRecipe} />
-            {loading && <Loading visible={loading} text="Actualizando Receta..." />}
         </ScrollView>
     );
 };
@@ -275,16 +277,35 @@ const styles = StyleSheet.create({
     container: {
         padding: 20,
     },
+
+    cardContainer: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        padding: 20,
+        margin: 10,
+        elevation: 3, // Sombra en Android
+        shadowColor: '#000', // Sombra en iOS
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 2,
+    },
     stepContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginBottom: 10,
     },
     input: {
         marginBottom: 10,
         padding: 10,
         backgroundColor: '#F5EBD6',
         borderRadius: 5,
-        flex: 1,
+        // Flex: 1 aquí puede hacer que los elementos dentro del input no se vean bien, ajusta según sea necesario
+    },
+    button: {
+        backgroundColor: '#4CAF50',
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 10,
     },
 });
 

@@ -9,6 +9,7 @@ import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/
 import { useNavigation } from '@react-navigation/native';
 import Loading from '../components/Loading';
 import { Ionicons } from '@expo/vector-icons'; // Importar el ícono de Ionicons
+import { TouchableOpacity } from 'react-native-gesture-handler';
 
 const IngredientList = ({ ingredients, handleUpdateIngredient, handleRemoveIngredient, handleAddIngredient }) => {
   return (
@@ -268,22 +269,31 @@ const ChefRecipeForm = () => {
           <Image source={{ uri: imagen }} style={styles.imagePreview} />
         )}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text>Seleccionar Imagen</Text>
-          <Ionicons
-            name="image-outline"
-            size={30}
-            color="blue"
-            onPress={pickImage}
-          />
-          <View style={{ alignItems: 'center' }}>
-
+          <TouchableOpacity style={{ backgroundColor: "#E5690E", borderRadius: 10, padding: 10, alignItems: "center" }}
+          onPress={pickImage}
+          >
             <Ionicons
-              name="add-circle-outline"
-              size={50}
-              color="blue"
-              onPress={handleAddRecipe}
+              name="image-outline"
+              size={30}
+              color="white"
+      
+            
             />
-            <Text>Subir Receta</Text>
+            <Text>Seleccionar Imagen</Text>
+
+          </TouchableOpacity>
+          <View style={{ alignItems: 'center' }}>
+            <TouchableOpacity style={{ backgroundColor: "#E5690E", borderRadius: 10, padding: 10, alignItems: "center" }}
+            onPress={handleAddRecipe}
+            >
+              <Ionicons
+                name="add-circle-outline"
+                size={50}
+                color="white"
+
+              />
+              <Text>Subir Receta</Text>
+            </TouchableOpacity>
           </View>
         </View>
         {loading && <Loading visible={loading} text="Agregando Receta..." />}
@@ -314,14 +324,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   input: {
-
-    borderTopWidth: 2,
+    borderWidth: 1,
     borderColor: '#E5690E',
     marginBottom: 10,
     padding: 10,
     backgroundColor: 'white',
     borderRadius: 5,
-    flex: 1,
   },
   multilineInput: {
     height: Platform.OS === 'ios' ? 80 : undefined,
@@ -333,6 +341,29 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
   },
+  pickerContainer: {
+    borderTopWidth: 1,
+    borderColor: '#E5690E',
+    marginBottom: 10,
+    borderRadius: 5,
+    backgroundColor: 'white',
+  },
+  picker: {
+    flex: 1,
+    padding: 10,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  selectImageText: {
+    alignSelf: 'center',
+    marginBottom: 5,
+  },
+  addRecipeButton: {
+    alignSelf: 'center',
+    alignItems: 'center',
+  },
 });
-
 export default ChefRecipeForm;

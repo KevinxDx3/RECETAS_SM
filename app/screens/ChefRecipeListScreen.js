@@ -9,6 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 const ChefRecipeListScreen = () => {
   const { state } = useAuth();
   const [recipes, setRecipes] = useState([]);
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -38,22 +39,39 @@ const ChefRecipeListScreen = () => {
     fetchRecipes();
   }, [state.user.uid]);
 
-  const handleDeleteRecipe = async (recipeId, imageUrl) => {
-    try {
-      // Eliminar la receta de Firebase Firestore
-      const recipeRef = doc(db, 'recipes', recipeId);
-      await deleteDoc(recipeRef);
+  const handleDeleteRecipe = (recipeId, imageUrl) => {
+    // Mostrar un mensaje de confirmación
+    Alert.alert(
+      'Eliminar receta',
+      '¿Estás seguro de que deseas eliminar esta receta?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Eliminar',
+          onPress: async () => {
+            try {
+              // Eliminar la receta de Firebase Firestore
+              const recipeRef = doc(db, 'recipes', recipeId);
+              await deleteDoc(recipeRef);
 
-      // Eliminar la imagen del almacenamiento de Firebase
-      const storageRef = ref(getStorage(), imageUrl);
-      await deleteObject(storageRef);
+              // Eliminar la imagen del almacenamiento de Firebase
+              const storageRef = ref(getStorage(), imageUrl);
+              await deleteObject(storageRef);
 
-      // Filtrar las recetas locales para reflejar el cambio
-      setRecipes((prevRecipes) => prevRecipes.filter((recipe) => recipe.id !== recipeId));
-    } catch (error) {
-      console.error('Error al eliminar la receta:', error);
-      Alert.alert('Error', 'Hubo un error al intentar eliminar la receta.');
-    }
+              // Filtrar las recetas locales para reflejar el cambio
+              setRecipes((prevRecipes) => prevRecipes.filter((recipe) => recipe.id !== recipeId));
+            } catch (error) {
+              console.error('Error al eliminar la receta:', error);
+              Alert.alert('Error', 'Hubo un error al intentar eliminar la receta.');
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   const handleEditRecipe = (recipeId) => {
@@ -70,13 +88,19 @@ const ChefRecipeListScreen = () => {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.recipeItem}>
-            <Text>{item.title}</Text>
-            <TouchableOpacity onPress={() => handleEditRecipe(item.id)}>
-              <Text style={styles.editButton}>Editar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDeleteRecipe(item.id, item.imageUrl)}>
-              <Text style={styles.deleteButton}>Eliminar</Text>
-            </TouchableOpacity>
+            <Text style={styles.recipeTitle}>{item.title}</Text>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity onPress={() => handleEditRecipe(item.id)} style={styles.editButton}>
+                <Text style={styles.buttonText}>Editar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => {
+                // Guardar la receta seleccionada antes de mostrar la alerta
+                setSelectedRecipe(item);
+                handleDeleteRecipe(item.id, item.imageUrl);
+              }} style={styles.deleteButton}>
+                <Text style={styles.buttonText}>Eliminar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       />
@@ -99,14 +123,31 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+    backgroundColor: '#FFF',
+    padding: 15,
+    borderRadius: 10,
+    elevation: 3,
+  },
+  recipeTitle: {
+    flex: 1,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   editButton: {
-    color: 'blue',
-    fontWeight: 'bold',
+    backgroundColor: 'blue',
+    padding: 10,
+    borderRadius: 5,
     marginRight: 10,
   },
   deleteButton: {
-    color: 'red',
+    backgroundColor: 'red',
+    padding: 10,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: 'white',
     fontWeight: 'bold',
   },
 });

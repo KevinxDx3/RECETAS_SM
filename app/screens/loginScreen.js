@@ -5,7 +5,7 @@ import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { initializeApp } from 'firebase/app'
 import React, { useState } from 'react';
 import { firebaseConfig } from '../../utils/firebase-config';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { Alert } from 'react-native';
 import { ImageBackground } from 'react-native';
 import { Image } from 'react-native';
@@ -14,24 +14,19 @@ import { getFirestore, collection, query, where, getDocs } from 'firebase/firest
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Loading from '../components/Loading';
 
-
-
 export const LoginScreen = () => {
 
-    //variables para el loguin
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
-    const [showPassword, setShowPassword] = React.useState(false); // Nuevo estado
+    const [showPassword, setShowPassword] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
 
-
     const togglePasswordVisibility = () => {
-        // Cambia el estado para mostrar u ocultar la contraseña
         setShowPassword(!showPassword);
     };
 
-
     const { login } = useAuth();
+    const navigation = useNavigation();
 
     const handleSignIn = async () => {
         const app = initializeApp(firebaseConfig);
@@ -42,72 +37,73 @@ export const LoginScreen = () => {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // Obtener el userType desde Firestore
             const userType = await getUserType(user.uid);
 
-            // Almacenar en el contexto
             login(user, userType);
-
             navigation.navigate('Home');
             console.log('El usuario es tipo: ' + userType)
 
         } catch (error) {
             console.log("Error al iniciar sesión:", error.message);
-            Alert.alert("Error", "Correo o contraseña son incorrectas");
-
+            Alert.alert("Error", "Correo o contraseña incorrectos");
         } finally {
             setLoading(false);
         }
-
     }
 
+    const handleForgotPassword = async () => {
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
 
-    const navigation = useNavigation();
+        try {
+            setLoading(true);
+            await sendPasswordResetEmail(auth, email);
+            Alert.alert("Éxito", "Se ha enviado un correo para restablecer la contraseña");
+        } catch (error) {
+            console.log("Error al enviar correo de recuperación:", error.message);
+            Alert.alert("Error", "No se pudo enviar el correo de recuperación. Verifica tu dirección de correo.");
+        } finally {
+            setLoading(false);
+        }
+    }
 
     return (
         <View style={{ flex: 1 }}>
             <Image source={require('../../assets/fondo.jpg')} style={styles.container} />
             <View style={styles.body}>
                 <View style={{ flex: 0.5, justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 20, }}>INICIO DE SESION</Text>
+                    <Text style={{ fontSize: 20 }}>INICIO DE SESIÓN</Text>
                 </View>
 
                 <View style={{ alignItems: 'center', flex: 2 }}>
-
                     <Text style={styles.text}>Email</Text>
-                    <TextInput style={styles.input} placeholder='alguien@gmail.com' onChangeText={(text) => setEmail(text)}  >
-                    </TextInput>
+                    <TextInput style={styles.input} placeholder='alguien@gmail.com' onChangeText={(text) => setEmail(text)} />
 
-                    <Text style={styles.text} >Contraseña</Text>
-
+                    <Text style={styles.text}>Contraseña</Text>
                     <View style={styles.inputContainer}>
-                        <TextInput style={styles.input} placeholder='Contraseña' secureTextEntry={!showPassword} onChangeText={(text) => setPassword(text)} >
-                        </TextInput>
+                        <TextInput style={styles.input} placeholder='Contraseña' secureTextEntry={!showPassword} onChangeText={(text) => setPassword(text)} />
                         <TouchableOpacity onPress={togglePasswordVisibility} style={styles.iconContainer}>
                             <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#333" />
                         </TouchableOpacity>
                     </View>
 
-
+                    <TouchableOpacity style={styles.forgotPasswordButton} onPress={handleForgotPassword}>
+                        <Text style={{ color: '#E5690E' }}>¿Olvidaste tu contraseña?</Text>
+                    </TouchableOpacity>
 
                     <View style={{ marginBottom: 30, flexDirection: 'row', marginTop: 20 }}>
-
                         <TouchableOpacity style={styles.Button} onPress={handleSignIn}>
-                            <Text style={{ color: 'white' }}>Iniciar Sesion</Text>
+                            <Text style={{ color: 'white' }}>Iniciar Sesión</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity style={styles.Button1} onPress={() => { navigation.navigate('Register') }}>
                             <Text style={{ color: 'white' }}>Crear Cuenta</Text>
                         </TouchableOpacity>
-
                     </View>
-
                 </View>
-
-
             </View>
             <Loading visible={loading} text="Iniciando sesión..." />
-        </View >
+        </View>
     );
 };
 
@@ -186,5 +182,9 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         paddingVertical: 8,
         marginBottom: 20,
+    },
+    forgotPasswordButton:{
+
+
     },
 });
