@@ -8,8 +8,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import { signOut } from 'firebase/auth';
 
+import { CommonActions } from '@react-navigation/native';
+
+
 export const HomeScreen = () => {
-  const { state } = useAuth();
+  const { state, dispatch } = useAuth();
   const navigation = useNavigation();
   const [popularRecipes, setPopularRecipes] = useState([]);
 
@@ -27,7 +30,15 @@ export const HomeScreen = () => {
   const handleSignOut = async () => {
     try {
       await signOut(state.auth);
-      dispatch({ type: 'SIGN_OUT' }); // Puedes definir un tipo específico para 'SIGN_OUT' en tu módulo de autenticación
+      dispatch({ type: 'LOGOUT' });
+  
+      // Utiliza 'reset' para volver a la pantalla de Login
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        })
+      );
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }

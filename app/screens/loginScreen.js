@@ -14,6 +14,7 @@ import { getFirestore, collection, query, where, getDocs } from 'firebase/firest
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Loading from '../components/Loading';
 
+
 export const LoginScreen = () => {
 
     const [email, setEmail] = React.useState('');
@@ -39,17 +40,16 @@ export const LoginScreen = () => {
 
             const userType = await getUserType(user.uid);
 
-            login(user, userType);
+            login(user, userType, auth); // Asegúrate de pasar el objeto auth
             navigation.navigate('Home');
-            console.log('El usuario es tipo: ' + userType)
-
+            console.log('El usuario es tipo: ' + userType);
         } catch (error) {
             console.log("Error al iniciar sesión:", error.message);
             Alert.alert("Error", "Correo o contraseña incorrectos");
         } finally {
             setLoading(false);
         }
-    }
+    };
 
     const handleForgotPassword = async () => {
         const app = initializeApp(firebaseConfig);
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         marginBottom: 20,
     },
-    forgotPasswordButton:{
+    forgotPasswordButton: {
 
 
     },

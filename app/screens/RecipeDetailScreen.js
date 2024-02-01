@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../utils/firebase-config';
 import { useAuth } from './AuthContext';
 import { IconButton } from 'react-native-paper';
+
 
 const RecipeDetailScreen = ({ route }) => {
   const { recipe } = route.params;
@@ -17,6 +18,12 @@ const RecipeDetailScreen = ({ route }) => {
 
   // Verifica si el usuario ha dado like en esta receta
   const likedByUser = state.likes[recipe.id]?.[userId];
+
+  useEffect(() => {
+    if (userId) {
+      setLiked(state.likes[recipe.id]?.[userId] || false);
+    }
+  }, [state.likes, userId, recipe.id]);
 
   const handleLike = async () => {
     setLiked(!liked);
