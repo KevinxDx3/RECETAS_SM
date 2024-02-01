@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../AuthContext';
 import { collection, getDocs, deleteDoc, query, where, doc } from 'firebase/firestore';
-import { db } from '../../utils/firebase-config';
+import { db } from '../../../utils/firebase-config';
 import { ref, deleteObject, getStorage } from 'firebase/storage';
 import { useNavigation } from '@react-navigation/native';
 

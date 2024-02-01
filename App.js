@@ -12,11 +12,16 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { LoginScreen } from './app/screens/loginScreen'
 import { RegisterScreen } from './app/screens/registerScreen'
 import { HomeScreen } from './app/screens/homeScreen'
-import ChefRecipeForm from './app/screens/ChefRecipeForm';
-import UserRecipeList from './app/screens/UserRecipeList';
-import ChefRecipeListScreen from './app/screens/ChefRecipeListScreen';
-import EditRecipeScreen from './app/screens/EditRecipeScreen';
-import RecipeDetailScreen from './app/screens/RecipeDetailScreen';
+
+//Chef
+import ChefRecipeForm from './app/screens/Chef/ChefRecipeForm';
+import ChefRecipeListScreen from './app/screens/Chef/ChefRecipeListScreen';
+import EditRecipeScreen from './app/screens/Chef/EditRecipeScreen';
+
+//User
+import RecipeDetailScreen from './app/screens/User/RecipeDetailScreen';
+import UserRecipeList from './app/screens/User/UserRecipeList';
+
 //firebase
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { initializeApp } from 'firebase/app';

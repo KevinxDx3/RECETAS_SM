@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, StyleSheet, ScrollView, Image, Text, Alert, Platform } from 'react-native';
 import { collection, addDoc } from 'firebase/firestore';
-import { db } from '../../utils/firebase-config';
-import { useAuth } from './AuthContext';
+import { db } from '../../../utils/firebase-config';
+import { useAuth } from '../AuthContext';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useNavigation } from '@react-navigation/native';
-import Loading from '../components/Loading';
+import Loading from '../../components/Loading';
 import { Ionicons } from '@expo/vector-icons'; // Importar el ícono de Ionicons
 import { TouchableOpacity } from 'react-native-gesture-handler';
 
