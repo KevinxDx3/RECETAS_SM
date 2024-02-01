@@ -5,7 +5,14 @@
     "version": "1.0.0",
     "assetBundlePatterns": [
       "**/*"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "73c202cb-7d0d-4612-b093-dbaa8943737d",
+        "apk": {}
+      }
+    },
+    "owner": "kevinxdx3"
   },
   "name": "Recetas"
 }
