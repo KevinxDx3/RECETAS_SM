@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { db } from '../../utils/firebase-config';
-import { useAuth } from './AuthContext';
+import { db } from '../../../utils/firebase-config';
+import { useAuth } from '../AuthContext';
 import { IconButton } from 'react-native-paper';
 
 

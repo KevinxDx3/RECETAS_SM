@@ -5,8 +5,8 @@ import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } f
 import { useNavigation, useRoute } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
-import Loading from '../components/Loading';
-import { db } from '../../utils/firebase-config';
+import Loading from '../../components/Loading';
+import { db } from '../../../utils/firebase-config';
 
 const IngredientList = ({ ingredients, handleUpdateIngredient, handleRemoveIngredient, handleAddIngredient }) => {
     return (

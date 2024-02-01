@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, TextInput, Button, ScrollView, Switch } from 'react-native';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
-import { db } from '../../utils/firebase-config';
-import { useAuth } from './AuthContext';
+import { db } from '../../../utils/firebase-config';
+import { useAuth } from '../AuthContext';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 
