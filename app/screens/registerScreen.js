@@ -1,15 +1,16 @@
 import { Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { View, Text, StyleSheet } from 'react-native';
-import { TextInput, TouchableOpacity} from 'react-native-gesture-handler';
+import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
 import { initializeApp } from 'firebase/app'
 import React, { useState } from 'react';
 import { firebaseConfig } from '../../utils/firebase-config';
 import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, } from 'firebase/auth';
 import { Alert } from 'react-native';
 import { SegmentedButtons } from 'react-native-paper';
-import { Image } from 'react-native';
+import { Image, Modal, ScrollView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Loading from '../components/Loading';
 
 //firestore
 import { addDoc, collection } from 'firebase/firestore';
@@ -35,6 +36,9 @@ export const RegisterScreen = () => {
     const [confirmPasswordError, setConfirmPasswordError] = useState('');
     const [nombreError, setNombreError] = useState('');
     const [accTypeError, setAccTypeError] = useState('');
+    const [acceptTerms, setAcceptTerms] = React.useState(false);
+    const [showTermsModal, setShowTermsModal] = React.useState(false);
+
 
     const togglePasswordVisibility = () => {
         // Cambia el estado para mostrar u ocultar la contraseña
@@ -45,10 +49,14 @@ export const RegisterScreen = () => {
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
+    const [loading, setLoading] = React.useState(false);
+
     const handleCreateAccount = () => {
+        setLoading(true); // Activar el estado de carga
         // Validaciones
         if (nombre === '' || !/^[a-zA-Z]+$/.test(nombre)) {
             setNombreError('El nombre no es válido');
+            setLoading(false);
             return;
         } else {
             setNombreError('');
@@ -56,6 +64,7 @@ export const RegisterScreen = () => {
 
         if (email === '' || !email.includes('@')) {
             setEmailError('El correo electrónico no es válido');
+            setLoading(false);
             return;
         } else {
             setEmailError('');
@@ -63,6 +72,7 @@ export const RegisterScreen = () => {
 
         if (password.length < 6 || !/[A-Z]/.test(password)) {
             setPasswordError('La contraseña debe tener al menos 6 caracteres y una mayúscula');
+            setLoading(false);
             return;
         } else {
             setPasswordError('');
@@ -70,6 +80,7 @@ export const RegisterScreen = () => {
 
         if (password !== confirmPassword) {
             setConfirmPasswordError('La contraseña y la confirmación no coinciden');
+            setLoading(false);
             return;
         } else {
             setConfirmPasswordError('');
@@ -77,6 +88,7 @@ export const RegisterScreen = () => {
 
         if (accType === '') {
             setAccTypeError('Selecciona un tipo de usuario');
+            setLoading(false);
             return;
         } else {
             setAccTypeError('');
@@ -106,6 +118,10 @@ export const RegisterScreen = () => {
             .catch(error => {
                 console.log("error!!!!!!!!!!!!!!!!!!!!!");
                 Alert.alert(error.message);
+                setLoading(false);
+            })
+            .finally(() => {
+                setLoading(false); // Desactivar el estado de carga incluso en caso de error
             });
     };
 
@@ -124,7 +140,9 @@ export const RegisterScreen = () => {
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={{ flex: 1 }}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
             >
+
                 <Image source={require('../../assets/fondo.jpg')} style={styles.container} />
                 <View style={styles.body}>
                     <View style={styles.formContainer}>
@@ -198,14 +216,57 @@ export const RegisterScreen = () => {
                         />
                         <Text style={styles.errorText}>{accTypeError}</Text>
 
-                        <View style={{ marginBottom: 30, flexDirection: 'row', marginTop: 20, }}>
-                            <TouchableOpacity style={styles.Button} onPress={handleCreateAccount}>
-                                <Text style={{ color: 'white' , width: 45,}}>CREAR</Text>
+                        <View style={styles.checkboxContainer}>
+                            <TouchableOpacity onPress={() => setAcceptTerms(!acceptTerms)}>
+                                <Ionicons
+                                    name={acceptTerms ? 'checkbox-outline' : 'square-outline'}
+                                    size={24}
+                                    color="#E5690E"
+                                />
+                            </TouchableOpacity>
+                            <Text style={styles.checkboxText}>
+                                Acepto los
+                                <Text style={{ fontWeight: 'bold' }} onPress={() => setShowTermsModal(true)}>
+                                    {' Términos y condiciones'}
+                                </Text>
+                            </Text>
+                        </View>
+
+                        <Modal
+                            visible={showTermsModal}
+                            transparent={true}
+                            animationType="slide"
+                            onRequestClose={() => setShowTermsModal(false)}
+                        >
+                            <View style={styles.modalContainer}>
+                                <ScrollView style={styles.modalContent}>
+                                    {/* Contenido de tus términos y condiciones */}
+                                    <Text>Aquí va el texto de los términos y condiciones...</Text>
+                                </ScrollView>
+                                <TouchableOpacity
+                                    style={styles.closeButton}
+                                    onPress={() => setShowTermsModal(false)}
+                                >
+                                    <Text style={{ color: 'white' }}>Pulsa atras para cerrar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </Modal>
+
+                        <View style={{ marginBottom: 30, flexDirection: 'row', marginTop: 20 }}>
+                            <TouchableOpacity
+                                style={acceptTerms ? styles.Button : styles.disabledButton}
+                                onPress={handleCreateAccount}
+                                disabled={!acceptTerms}
+                            >
+                                <Text style={{ color: 'white', width: 45, }}>CREAR</Text>
                             </TouchableOpacity>
                         </View>
+
+
                     </View>
                 </View>
             </KeyboardAvoidingView>
+            <Loading visible={loading} text="Creando Cuenta..." />
         </View>
 
     );
@@ -274,6 +335,38 @@ const styles = StyleSheet.create({
     errorText: {
         color: 'red',
         fontSize: 9,
+    },
+    checkboxContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    checkboxText: {
+        marginLeft: 10,
+        fontSize: 12,
+        color: '#333',
+    },
+    disabledButton: {
+        backgroundColor: '#E5690E',
+        alignItems: 'center',
+        padding: 15,
+        borderRadius: 50,
+        justifyContent: 'center',
+        opacity: 1,
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: 'white',
+        padding: 20,
+        maxHeight: 300,
+    },
+    closeButton: {
+        backgroundColor: '#E5690E',
+        padding: 15,
+        alignItems: 'center',
     },
 
 });

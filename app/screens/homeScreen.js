@@ -6,6 +6,7 @@ import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../utils/firebase-config';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
+import { signOut } from 'firebase/auth';
 
 export const HomeScreen = () => {
   const { state } = useAuth();
@@ -23,6 +24,15 @@ export const HomeScreen = () => {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(state.auth);
+      dispatch({ type: 'SIGN_OUT' }); // Puedes definir un tipo específico para 'SIGN_OUT' en tu módulo de autenticación
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
+
   // Utiliza useFocusEffect para recargar las recetas populares cada vez que se visite la ventana de Home
   useFocusEffect(
     React.useCallback(() => {
@@ -36,6 +46,7 @@ export const HomeScreen = () => {
         <Text style={styles.welcomeText}>Mi libro de recetas</Text>
         {state.userType === '1' && (
           <>
+            <Text style={styles.welcomeText}>Chef</Text>
             <TouchableOpacity
               style={styles.buttonContainer}
               onPress={() => navigation.navigate('ChefRecipeScreen')}
@@ -61,6 +72,14 @@ export const HomeScreen = () => {
             <Text style={styles.buttonText}>Ver Recetas</Text>
           </TouchableOpacity>
         )}
+
+        <TouchableOpacity
+          style={styles.buttonContainerOut}
+          onPress={handleSignOut}
+        >
+          <Icon name="log-out" size={20} color="#fff" style={styles.icon} />
+          <Text style={styles.buttonText}>Cerrar Sesión</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.rightContainer}>
@@ -168,7 +187,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     marginBottom: 20,
     alignItems: 'center',
-    
+
   },
   popularRecipeTitle: {
     fontSize: 20,
@@ -187,5 +206,13 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginRight: 10,
+  },
+  buttonContainerOut: {
+    backgroundColor: '#E5690E',
+    padding: '6%',
+    borderRadius: 50,
+    marginTop: '3%',
+    flexDirection: 'row',
+    elevation: 4,
   },
 });
