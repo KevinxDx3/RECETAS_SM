@@ -49,6 +49,41 @@ export const RegisterScreen = () => {
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
+    const termsAndConditionsText = `
+        TÉRMINOS Y CONDICIONES DE USO
+
+   
+        
+        Bienvenido a [RecetasSM]. Al acceder y utilizar esta aplicación, aceptas cumplir con estos términos y condiciones de uso. Si no estás de acuerdo con alguno de los siguientes términos, por favor, no utilices la aplicación.
+        
+        1. USO DE LA APLICACIÓN
+        
+        1.1 Contenido: La aplicación proporciona [Sistema de gestión de recetas]. Entiendes y aceptas que cualquier contenido, incluyendo recetas y otras informaciones disponibles en la aplicación, es proporcionado por los usuarios y no asumimos responsabilidad por la exactitud, legalidad o idoneidad de dicho contenido.
+        
+        1.2 Derechos de autor: Los usuarios son responsables de garantizar que el contenido que comparten, incluyendo recetas, cumpla con los derechos de autor y otras leyes aplicables. No nos hacemos responsables por infringir los derechos de autor u otras violaciones legales relacionadas con el contenido compartido por los usuarios.
+        
+        1.3 Contenido Obsceno: No se permite compartir contenido obsceno, ofensivo o inapropiado. Nos reservamos el derecho de eliminar cualquier contenido que consideremos inapropiado.
+        
+        2. RESPONSABILIDADES Y EXENCIÓN DE RESPONSABILIDAD
+        
+        2.1 Uso de Recetas: Las recetas proporcionadas por los usuarios son solo para fines informativos. No asumimos responsabilidad por cualquier daño, lesión o pérdida que pueda surgir del uso de las recetas compartidas en la aplicación.
+        
+        2.2 Ausencia de Responsabilidad: La aplicación se proporciona "tal cual", sin garantías de ningún tipo. No garantizamos la exactitud, confiabilidad o disponibilidad de la aplicación.
+        
+        3. MODIFICACIONES
+        
+        Nos reservamos el derecho de modificar estos términos y condiciones en cualquier momento. Las modificaciones entrarán en vigencia inmediatamente después de su publicación en la aplicación. Se recomienda revisar periódicamente estos términos para estar informado de cualquier cambio.
+        
+        4. DISPOSICIONES FINALES
+        
+        4.1 Contacto: Si tienes alguna pregunta sobre estos términos y condiciones, contáctanos a kevin.moreno01@epn.edu.ec.
+        
+        Al utilizar esta aplicación, aceptas estos términos y condiciones de uso. Gracias por ser parte de [Recetas].
+        
+        Fecha de la última actualización: [01/02/2024]
+    
+    `;
+
     const [loading, setLoading] = React.useState(false);
 
     const handleCreateAccount = () => {
@@ -241,7 +276,7 @@ export const RegisterScreen = () => {
                             <View style={styles.modalContainer}>
                                 <ScrollView style={styles.modalContent}>
                                     {/* Contenido de tus términos y condiciones */}
-                                    <Text>Aquí va el texto de los términos y condiciones...</Text>
+                                    <Text>{termsAndConditionsText}</Text>
                                 </ScrollView>
                                 <TouchableOpacity
                                     style={styles.closeButton}
@@ -253,13 +288,15 @@ export const RegisterScreen = () => {
                         </Modal>
 
                         <View style={{ marginBottom: 30, flexDirection: 'row', marginTop: 20 }}>
-                            <TouchableOpacity
-                                style={acceptTerms ? styles.Button : styles.disabledButton}
-                                onPress={handleCreateAccount}
-                                disabled={!acceptTerms}
-                            >
-                                <Text style={{ color: 'white', width: 45, }}>CREAR</Text>
-                            </TouchableOpacity>
+                            <View style={{ marginBottom: 30, flexDirection: 'row', marginTop: 20 }}>
+                                <TouchableOpacity
+                                    style={acceptTerms ? styles.button : styles.disabledButton}
+                                    onPress={handleCreateAccount}
+                                    disabled={!acceptTerms}
+                                >
+                                    <Text style={styles.buttonText}>CREAR</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
 
@@ -310,14 +347,15 @@ const styles = StyleSheet.create({
         marginTop: 20,
         width: 200,
     },
-    Button: {
+    button: {
         backgroundColor: '#E5690E',
         alignItems: 'center',
         padding: 15,
-        borderRadius: 50,
+        borderRadius: 30, // Ajusta el radio del borde para que sea más redondo
         justifyContent: 'center',
-
-    },
+        width: 200, // Ajusta el ancho del botón según tus necesidades
+      },
+    
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -368,5 +406,8 @@ const styles = StyleSheet.create({
         padding: 15,
         alignItems: 'center',
     },
+    buttonText: {
+        color: 'white',
+      },
 
 });
